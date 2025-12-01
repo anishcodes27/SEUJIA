@@ -1,0 +1,90 @@
+{
+  "name": "Seujia Honey API",
+  "version": "1.0.0",
+  "description": "E-commerce API for Seujia Honey storefront",
+  "collections": [
+    {
+      "name": "Products",
+      "requests": [
+        {
+          "name": "Get All Products",
+          "method": "GET",
+          "url": "{{baseUrl}}/api/products",
+          "description": "Fetch all active products"
+        },
+        {
+          "name": "Get Product by Slug",
+          "method": "GET",
+          "url": "{{baseUrl}}/api/product/raw-wildflower-honey",
+          "description": "Fetch a single product by slug"
+        }
+      ]
+    },
+    {
+      "name": "Coupons",
+      "requests": [
+        {
+          "name": "Apply Coupon",
+          "method": "POST",
+          "url": "{{baseUrl}}/api/apply-coupon",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "couponCode": "WELCOME10",
+            "subtotal": 50.00
+          },
+          "description": "Validate and apply a coupon code"
+        }
+      ]
+    },
+    {
+      "name": "Checkout",
+      "requests": [
+        {
+          "name": "Create Checkout (Stripe)",
+          "method": "POST",
+          "url": "{{baseUrl}}/api/create-checkout",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "cart": [
+              {
+                "product": {
+                  "id": "product-id-here",
+                  "name": "Raw Wildflower Honey",
+                  "price": 24.99
+                },
+                "quantity": 2
+              }
+            ],
+            "shipping": {
+              "name": "John Doe",
+              "email": "john@example.com",
+              "phone": "+1234567890",
+              "address": "123 Main St, City, State 12345"
+            },
+            "couponCode": "WELCOME10",
+            "paymentProvider": "stripe"
+          },
+          "description": "Create order and Stripe payment intent"
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "baseUrl": "http://localhost:3000"
+  },
+  "testCards": {
+    "stripe": {
+      "success": "4242424242424242",
+      "decline": "4000000000000002",
+      "3dsecure": "4000002500003155"
+    },
+    "razorpay": {
+      "success": "4111111111111111",
+      "decline": "4000000000000002"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+name: Keep Supabase Database Active
+
+on:
+  schedule:
+    # Run twice a week: Monday at 10:00 AM UTC and Thursday at 10:00 AM UTC
+    - cron: '0 10 * * 1,4'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  ping-database:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Ping keep-alive endpoint
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.APP_URL }}/api/keep-alive)
+          echo "Response code: $response"
+          if [ $response -eq 200 ]; then
+            echo "✅ Database ping successful!"
+          else
+            echo "❌ Database ping failed with code: $response"
+            exit 1
+          fi
