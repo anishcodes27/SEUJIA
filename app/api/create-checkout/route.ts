@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { generateOrderNumber } from '@/lib/utils';
+import Razorpay from 'razorpay';
 
-// Initialize Razorpay (install: npm install razorpay)
-// Uncomment after installing razorpay package and setting up environment variables
-// import Razorpay from 'razorpay';
-// const razorpay = new Razorpay({
-//   key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-//   key_secret: process.env.RAZORPAY_KEY_SECRET!,
-// });
+// Initialize Razorpay
+const razorpay = new Razorpay({
+  key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -85,7 +84,16 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (orderError) throw orderError;
+    if (orderError) {
+      console.error('Order creation error:', orderError);
+      throw orderError;
+    }
+
+    console.log('Order created successfully:', {
+      order_id: order.id,
+      order_number: orderNumber,
+      customer_email: shipping.email,
+    });
 
     // Create order items
     const orderItems = cart.map((item: any) => ({
@@ -122,22 +130,21 @@ export async function POST(request: NextRequest) {
       });
     } else if (paymentMethod === 'razorpay') {
       // Razorpay integration
-      // Uncomment after installing razorpay package
-      // const razorpayOrder = await razorpay.orders.create({
-      //   amount: Math.round(finalTotal * 100), // Razorpay uses paise (1 INR = 100 paise)
-      //   currency: 'INR',
-      //   receipt: orderNumber,
-      // });
+      const razorpayOrder = await razorpay.orders.create({
+        amount: Math.round(finalTotal * 100), // Razorpay uses paise (1 INR = 100 paise)
+        currency: 'INR',
+        receipt: orderNumber,
+      });
 
-      // await supabaseAdmin
-      //   .from('orders')
-      //   .update({ payment_intent_id: razorpayOrder.id })
-      //   .eq('id', order.id);
+      await supabaseAdmin
+        .from('orders')
+        .update({ payment_intent_id: razorpayOrder.id })
+        .eq('id', order.id);
 
       return NextResponse.json({
         orderId: order.id,
         orderNumber: orderNumber,
-        razorpayOrderId: 'order_test_' + orderNumber, // Replace with: razorpayOrder.id
+        razorpayOrderId: razorpayOrder.id,
         amount: Math.round(finalTotal * 100),
       });
     }

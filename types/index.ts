@@ -53,6 +53,14 @@ export interface Order {
   payment_intent_id: string | null;
   payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
   order_status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  // Shiprocket tracking fields
+  shiprocket_order_id?: number;
+  shiprocket_shipment_id?: number;
+  awb_code?: string;
+  courier_name?: string;
+  tracking_url?: string;
+  shipment_status?: string;
+  estimated_delivery_date?: string;
   created_at: string;
   updated_at: string;
 }

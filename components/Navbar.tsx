@@ -80,6 +80,18 @@ export default function Navbar() {
               Shop
             </Link>
             <Link 
+              href="/orders" 
+              className="px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 font-semibold text-white text-sm lg:text-base tracking-wide uppercase"
+            >
+              Orders
+            </Link>
+            <Link 
+              href="/track-order" 
+              className="px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 font-semibold text-white text-sm lg:text-base tracking-wide uppercase"
+            >
+              Track
+            </Link>
+            <Link 
               href="/cart" 
               className="relative px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 font-semibold text-white text-sm lg:text-base tracking-wide uppercase ml-2"
             >
@@ -193,6 +205,20 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
             >
               🛍️ Shop
+            </Link>
+            <Link
+              href="/orders"
+              className="block py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 font-semibold text-white uppercase tracking-wide"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              📦 Orders
+            </Link>
+            <Link
+              href="/track-order"
+              className="block py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-200 font-semibold text-white uppercase tracking-wide"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              🔍 Track
             </Link>
             <Link
               href="/cart"

@@ -1,8 +1,9 @@
 'use client';
 
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { formatPrice, validateEmail, validatePhone } from '@/lib/utils';
-import { calculateShipping, getAmountForFreeShipping } from '@/lib/shipping-calculator';
+import { calculatePackageWeight } from '@/lib/shiprocket';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
@@ -16,6 +17,7 @@ declare global {
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, getCartTotal, clearCart } = useCart();
+  const { user } = useAuth();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -31,37 +33,94 @@ export default function CheckoutPage() {
   const [discount, setDiscount] = useState(0);
   const [deliveryCharges, setDeliveryCharges] = useState(0);
   const [shippingInfo, setShippingInfo] = useState({
-    baseCharge: 0,
-    codCharge: 0,
-    isFreeShipping: false,
-    savedAmount: 0,
+    courier_name: '',
+    etd: '',
+    freight_charge: 0,
+    cod_charges: 0,
   });
   const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('cod');
   const [loading, setLoading] = useState(false);
   const [fetchingLocation, setFetchingLocation] = useState(false);
+
+  // Auto-fill user info if logged in
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+      }));
+    }
+  }, [user]);
+  const [fetchingShipping, setFetchingShipping] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const subtotal = getCartTotal();
   const total = subtotal - discount + deliveryCharges;
 
-  // Calculate shipping charges when state or payment method changes
-  useEffect(() => {
-    if (formData.state) {
-      const shipping = calculateShipping({
-        state: formData.state,
-        orderValue: subtotal - discount,
-        isCOD: paymentMethod === 'cod',
-      });
+  // Fetch shipping rates from Shiprocket when pincode and payment method changes
+  const fetchShippingRates = async (pincode: string, isCOD: boolean) => {
+    if (pincode.length !== 6) return;
+    
+    setFetchingShipping(true);
+    try {
+      const packageWeight = calculatePackageWeight(cart);
       
-      setDeliveryCharges(shipping.totalCharge);
+      const response = await fetch('/api/shiprocket/get-rates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          delivery_pincode: pincode,
+          weight: packageWeight,
+          cod: isCOD,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        const rates = data.data;
+        setShippingInfo({
+          courier_name: rates.courier_name,
+          etd: rates.etd,
+          freight_charge: rates.freight_charge,
+          cod_charges: rates.cod_charges,
+        });
+        setDeliveryCharges(rates.total_charge);
+      } else {
+        console.error('Failed to fetch shipping rates:', data.error);
+        setErrors(prev => ({ 
+          ...prev, 
+          shipping: 'Delivery not available for this location' 
+        }));
+        setDeliveryCharges(0);
+      }
+    } catch (error) {
+      console.error('Error fetching shipping rates:', error);
+      setErrors(prev => ({ 
+        ...prev, 
+        shipping: 'Failed to calculate shipping charges' 
+      }));
+      setDeliveryCharges(0);
+    } finally {
+      setFetchingShipping(false);
+    }
+  };
+
+  // Calculate shipping charges when pincode or payment method changes
+  useEffect(() => {
+    if (formData.pincode.length === 6 && !errors.pincode) {
+      fetchShippingRates(formData.pincode, paymentMethod === 'cod');
+    } else {
+      setDeliveryCharges(0);
       setShippingInfo({
-        baseCharge: shipping.baseCharge,
-        codCharge: shipping.codCharge,
-        isFreeShipping: shipping.isFreeShipping,
-        savedAmount: shipping.savedAmount || 0,
+        courier_name: '',
+        etd: '',
+        freight_charge: 0,
+        cod_charges: 0,
       });
     }
-  }, [formData.state, paymentMethod, subtotal, discount]);
+  }, [formData.pincode, paymentMethod, cart]);
 
   // Fetch location details from pincode
   const fetchLocationFromPincode = async (pincode: string) => {
@@ -108,21 +167,9 @@ export default function CheckoutPage() {
   const handlePaymentMethodChange = (method: 'razorpay' | 'cod') => {
     setPaymentMethod(method);
     
-    // Recalculate shipping based on new payment method
-    if (formData.state) {
-      const shipping = calculateShipping({
-        state: formData.state,
-        orderValue: subtotal - discount,
-        isCOD: method === 'cod',
-      });
-      
-      setDeliveryCharges(shipping.totalCharge);
-      setShippingInfo({
-        baseCharge: shipping.baseCharge,
-        codCharge: shipping.codCharge,
-        isFreeShipping: shipping.isFreeShipping,
-        savedAmount: shipping.savedAmount || 0,
-      });
+    // Refetch shipping rates with new payment method
+    if (formData.pincode.length === 6 && !errors.pincode) {
+      fetchShippingRates(formData.pincode, method === 'cod');
     }
   };
 
@@ -271,9 +318,16 @@ export default function CheckoutPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-honey-500 ${
-                    errors.email ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                    user ? 'bg-gray-100 cursor-not-allowed' : ''
+                  } ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+                  readOnly={!!user}
+                  disabled={!!user}
                 />
+                {user && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    🔒 Using your account email
+                  </p>
+                )}
                 {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
               </div>
 
@@ -381,12 +435,10 @@ export default function CheckoutPage() {
                     <div className="ml-3 flex-1">
                       <span className="font-semibold text-gray-900">Cash on Delivery (COD)</span>
                       <p className="text-sm text-gray-600 mt-1">Pay when you receive the product</p>
-                      {paymentMethod === 'cod' && formData.state && (
-                        <div className="text-sm mt-1">
-                          <p className="text-honey-600 font-medium">
-                            Base: ₹{shippingInfo.baseCharge} + COD: ₹{shippingInfo.codCharge} = ₹{deliveryCharges}
-                          </p>
-                        </div>
+                      {paymentMethod === 'cod' && shippingInfo.cod_charges > 0 && (
+                        <p className="text-sm text-honey-600 mt-1">
+                          Additional COD charges: ₹{shippingInfo.cod_charges}
+                        </p>
                       )}
                     </div>
                     <span className="text-2xl">💵</span>
@@ -405,13 +457,12 @@ export default function CheckoutPage() {
                       <span className="font-semibold text-gray-900">Razorpay (UPI, Cards, Net Banking)</span>
                       <p className="text-sm text-gray-600 mt-1">
                         Pay securely online
-                        {shippingInfo.isFreeShipping && formData.state && (
-                          <span className="text-green-600 font-medium"> - FREE delivery! 🎉</span>
-                        )}
-                        {!shippingInfo.isFreeShipping && formData.state && deliveryCharges > 0 && (
-                          <span className="text-honey-600 font-medium"> - ₹{deliveryCharges} shipping</span>
-                        )}
                       </p>
+                      {paymentMethod === 'razorpay' && deliveryCharges > 0 && shippingInfo.courier_name && (
+                        <p className="text-sm text-honey-600 mt-1">
+                          via {shippingInfo.courier_name} - Delivery in {shippingInfo.etd}
+                        </p>
+                      )}
                     </div>
                     <span className="text-2xl">💳</span>
                   </label>
@@ -458,62 +509,41 @@ export default function CheckoutPage() {
               )}
               
               {/* Shipping Charges Details */}
-              {formData.state && (
-                <>
-                  {shippingInfo.isFreeShipping ? (
-                    <div className="flex justify-between text-green-600 font-semibold">
-                      <div className="flex items-center gap-2">
-                        <span>Delivery Charges</span>
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">FREE</span>
-                      </div>
-                      <div className="text-right">
-                        <div>₹0</div>
-                        <div className="text-xs">Saved ₹{shippingInfo.savedAmount}</div>
-                      </div>
+              {fetchingShipping ? (
+                <div className="flex justify-between text-honey-600">
+                  <span>Calculating delivery...</span>
+                  <span className="animate-pulse">⏳</span>
+                </div>
+              ) : formData.pincode.length === 6 && deliveryCharges > 0 ? (
+                <div className="bg-honey-50 -mx-4 px-4 py-3 space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Shipping ({shippingInfo.courier_name})</span>
+                    <span className="text-gray-900">₹{shippingInfo.freight_charge}</span>
+                  </div>
+                  {paymentMethod === 'cod' && shippingInfo.cod_charges > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">COD Charges</span>
+                      <span className="text-gray-900">₹{shippingInfo.cod_charges}</span>
                     </div>
-                  ) : (
-                    <>
-                      {deliveryCharges > 0 && (
-                        <div className="bg-honey-50 -mx-4 px-4 py-3 space-y-1">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Base Shipping ({formData.state})</span>
-                            <span className="text-gray-900">₹{shippingInfo.baseCharge}</span>
-                          </div>
-                          {paymentMethod === 'cod' && shippingInfo.codCharge > 0 && (
-                            <div className="flex justify-between text-sm">
-                              <span className="text-gray-600">COD Charges</span>
-                              <span className="text-gray-900">₹{shippingInfo.codCharge}</span>
-                            </div>
-                          )}
-                          <div className="flex justify-between font-semibold pt-2 border-t border-honey-200">
-                            <span className="text-honey-800">Total Delivery</span>
-                            <span className="text-honey-800">₹{deliveryCharges}</span>
-                          </div>
-                        </div>
-                      )}
-                    </>
                   )}
-                  
-                  {/* Free Shipping Progress */}
-                  {!shippingInfo.isFreeShipping && paymentMethod !== 'cod' && formData.state && (
-                    <>
-                      {(() => {
-                        const amountNeeded = getAmountForFreeShipping(formData.state, subtotal - discount);
-                        return amountNeeded && amountNeeded > 0 ? (
-                          <div className="bg-blue-50 -mx-4 px-4 py-2 text-xs text-blue-700">
-                            💡 Add ₹{amountNeeded} more to get FREE delivery!
-                          </div>
-                        ) : null;
-                      })()}
-                    </>
+                  {shippingInfo.etd && (
+                    <div className="text-xs text-gray-500 pt-1">
+                      📦 Estimated delivery: {shippingInfo.etd}
+                    </div>
                   )}
-                </>
-              )}
-              
-              {!formData.state && (
+                  <div className="flex justify-between font-semibold pt-2 border-t border-honey-200">
+                    <span className="text-honey-800">Total Delivery</span>
+                    <span className="text-honey-800">₹{deliveryCharges}</span>
+                  </div>
+                </div>
+              ) : formData.pincode.length === 6 && errors.shipping ? (
+                <div className="flex justify-between text-red-500 text-sm">
+                  <span>{errors.shipping}</span>
+                </div>
+              ) : (
                 <div className="flex justify-between text-gray-400 text-sm">
                   <span>Delivery Charges</span>
-                  <span>Enter location</span>
+                  <span>Enter pincode</span>
                 </div>
               )}
               
