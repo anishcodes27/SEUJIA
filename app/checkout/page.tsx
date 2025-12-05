@@ -38,7 +38,7 @@ export default function CheckoutPage() {
     freight_charge: 0,
     cod_charges: 0,
   });
-  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('razorpay');
   const [loading, setLoading] = useState(false);
   const [fetchingLocation, setFetchingLocation] = useState(false);
 
@@ -66,6 +66,14 @@ export default function CheckoutPage() {
     try {
       const packageWeight = calculatePackageWeight(cart);
       
+      console.log('🔍 Fetching shipping rates:');
+      console.log('  Cart items:', cart.length);
+      console.log('  Total quantity:', cart.reduce((sum, item) => sum + item.quantity, 0));
+      console.log('  Calculated weight:', packageWeight, 'kg');
+      console.log('  Is COD:', isCOD);
+      console.log('  Pincode:', pincode);
+      
+      // Try Shiprocket first
       const response = await fetch('/api/shiprocket/get-rates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -88,15 +96,30 @@ export default function CheckoutPage() {
         });
         setDeliveryCharges(rates.total_charge);
       } else {
-        console.error('Failed to fetch shipping rates:', data.error);
-        setErrors(prev => ({ 
-          ...prev, 
-          shipping: 'Delivery not available for this location' 
-        }));
-        setDeliveryCharges(0);
+        // Fallback to fixed charges if Shiprocket fails
+        console.log('Shiprocket unavailable, using fixed charges');
+        const fixedFreight = 50;
+        const fixedCOD = isCOD ? 30 : 0;
+        setShippingInfo({
+          courier_name: 'Standard Delivery',
+          etd: '5-7 days',
+          freight_charge: fixedFreight,
+          cod_charges: fixedCOD,
+        });
+        setDeliveryCharges(fixedFreight + fixedCOD);
       }
     } catch (error) {
-      console.error('Error fetching shipping rates:', error);
+      // Fallback to fixed charges on error
+      console.log('Error fetching rates, using fixed charges');
+      const fixedFreight = 50;
+      const fixedCOD = isCOD ? 30 : 0;
+      setShippingInfo({
+        courier_name: 'Standard Delivery',
+        etd: '5-7 days',
+        freight_charge: fixedFreight,
+        cod_charges: fixedCOD,
+      });
+      setDeliveryCharges(fixedFreight + fixedCOD);
       setErrors(prev => ({ 
         ...prev, 
         shipping: 'Failed to calculate shipping charges' 

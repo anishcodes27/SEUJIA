@@ -11,19 +11,19 @@ export default function AuthenticitySection() {
     {
       id: 1,
       title: 'Honey Harvesting Process',
-      videoUrl: 'https://drive.google.com/file/d/YOUR_FILE_ID_1/preview',
+      videoUrl: 'https://drive.google.com/file/d/1wK7KB6Hr1UzK5JVBQw62rHtpzSRwHKCD/preview',
       description: 'Watch how we carefully harvest pure honey from our hives'
     },
     {
       id: 2,
       title: 'Our Bee Farm',
-      videoUrl: 'https://drive.google.com/file/d/YOUR_FILE_ID_2/preview',
+      videoUrl: 'https://drive.google.com/file/d/1JwfZxlyLaTRJKd7J9td_VqwSpvNhU6PX/preview',
       description: 'A tour of our sustainable bee farming facilities'
     },
     {
       id: 3,
       title: 'Quality Testing',
-      videoUrl: 'https://drive.google.com/file/d/YOUR_FILE_ID_3/preview',
+      videoUrl: 'https://drive.google.com/file/d/1NMtK5pTJPlZBpDbplaunALeiwvwNfFS8/preview',
       description: 'See our rigorous quality control and testing process'
     },
   ];

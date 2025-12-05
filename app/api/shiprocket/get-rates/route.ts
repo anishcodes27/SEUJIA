@@ -5,6 +5,8 @@ export async function POST(request: NextRequest) {
   try {
     const { delivery_pincode, weight, cod } = await request.json();
 
+    console.log('📦 API: Shiprocket rate request:', { delivery_pincode, weight, cod });
+
     if (!delivery_pincode || !weight) {
       return NextResponse.json(
         { error: 'Missing required fields: delivery_pincode, weight' },
@@ -19,6 +21,8 @@ export async function POST(request: NextRequest) {
       weight: weight,
       cod: cod || false,
     });
+
+    console.log('✅ API: Shiprocket response:', rates);
 
     return NextResponse.json({
       success: true,

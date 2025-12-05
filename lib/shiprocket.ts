@@ -359,13 +359,16 @@ export const shiprocket = new ShiprocketAPI();
 
 // Helper function to calculate package weight from cart
 export function calculatePackageWeight(cart: Array<{ quantity: number; product: any }>): number {
-  // Assume average weight per product
-  // Adjust based on your actual product weights
-  const AVERAGE_PRODUCT_WEIGHT = 0.5; // kg per item
+  // Honey bottle weight calculation
+  // Average honey bottle: 250g product + 150g bottle = 0.4kg
+  const AVERAGE_PRODUCT_WEIGHT = 0.4; // kg per honey bottle
   const PACKAGING_WEIGHT = 0.1; // kg for packaging
   
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  return (totalItems * AVERAGE_PRODUCT_WEIGHT) + PACKAGING_WEIGHT;
+  const totalWeight = (totalItems * AVERAGE_PRODUCT_WEIGHT) + PACKAGING_WEIGHT;
+  
+  // Minimum weight for Shiprocket is 0.5kg
+  return Math.max(totalWeight, 0.5);
 }
 
 // Helper function to get default pickup pincode
