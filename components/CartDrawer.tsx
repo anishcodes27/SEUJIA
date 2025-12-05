@@ -108,8 +108,9 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           >
                             +
                           </button>
-                          <button
-                            onClick={() => removeFromCart(item.product.id, item.selectedVariant)}
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.product.id, item.selectedVariant)}
                           className="ml-auto text-red-500 hover:text-red-700 text-sm"
                         >
                           Remove
