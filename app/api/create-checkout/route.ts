@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { generateOrderNumber } from '@/lib/utils';
 import Razorpay from 'razorpay';
+import { sendEmail } from '@/lib/email/send';
+import { getOrderConfirmationEmailHtml, getOrderConfirmationEmailText } from '@/lib/email/templates/order-confirmation';
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
@@ -117,6 +119,51 @@ export async function POST(request: NextRequest) {
         .from('coupons')
         .update({ current_uses: validatedCoupon.current_uses + 1 })
         .eq('id', validatedCoupon.id);
+    }
+
+    // Send order confirmation email
+    try {
+      const emailResult = await sendEmail({
+        to: shipping.email,
+        subject: `Order Confirmed - ${orderNumber} 🍯`,
+        html: getOrderConfirmationEmailHtml({
+          customerName: shipping.name,
+          orderNumber: orderNumber,
+          orderItems: cart.map((item: any) => ({
+            name: item.product.name,
+            quantity: item.quantity,
+            price: item.product.price,
+          })),
+          subtotal: subtotal,
+          discount: discount,
+          total: finalTotal,
+          shippingAddress: fullAddress,
+          paymentMethod: paymentMethod,
+        }),
+        text: getOrderConfirmationEmailText({
+          customerName: shipping.name,
+          orderNumber: orderNumber,
+          orderItems: cart.map((item: any) => ({
+            name: item.product.name,
+            quantity: item.quantity,
+            price: item.product.price,
+          })),
+          subtotal: subtotal,
+          discount: discount,
+          total: finalTotal,
+          shippingAddress: fullAddress,
+          paymentMethod: paymentMethod,
+        }),
+      });
+
+      if (emailResult.success) {
+        console.log('✅ Order confirmation email sent to:', shipping.email);
+      } else {
+        console.error('Failed to send order confirmation email:', emailResult.error);
+      }
+    } catch (emailError) {
+      console.error('Error sending order confirmation email:', emailError);
+      // Don't fail the order if email fails
     }
 
     // Create payment based on provider

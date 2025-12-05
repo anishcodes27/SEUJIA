@@ -37,6 +37,14 @@ export default function AdminPage() {
 
   // Orders state
   const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [trackingForm, setTrackingForm] = useState({
+    awbCode: '',
+    courierName: '',
+    trackingUrl: '',
+    shipmentStatus: 'shipped',
+    estimatedDelivery: '',
+  });
 
   useEffect(() => {
     const auth = localStorage.getItem('admin_authenticated');
@@ -137,6 +145,50 @@ export default function AdminPage() {
     if (confirm('Are you sure you want to delete this coupon?')) {
       await fetch(`/api/admin/coupons?id=${id}`, { method: 'DELETE' });
       loadData();
+    }
+  };
+
+  const handleUpdateTracking = async () => {
+    if (!selectedOrder) return;
+
+    if (!trackingForm.awbCode || !trackingForm.courierName) {
+      alert('AWB Code and Courier Name are required');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/update-tracking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: selectedOrder.id,
+          awbCode: trackingForm.awbCode,
+          courierName: trackingForm.courierName,
+          trackingUrl: trackingForm.trackingUrl,
+          shipmentStatus: trackingForm.shipmentStatus,
+          estimatedDelivery: trackingForm.estimatedDelivery,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Tracking information updated successfully! Email sent to customer.');
+        setSelectedOrder(null);
+        setTrackingForm({
+          awbCode: '',
+          courierName: '',
+          trackingUrl: '',
+          shipmentStatus: 'shipped',
+          estimatedDelivery: '',
+        });
+        loadData();
+      } else {
+        alert(data.error || 'Failed to update tracking information');
+      }
+    } catch (error) {
+      console.error('Error updating tracking:', error);
+      alert('Failed to update tracking information');
     }
   };
 
@@ -422,46 +474,196 @@ export default function AdminPage() {
 
         {/* Orders Tab */}
         {activeTab === 'orders' && (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order #</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {orders.map((order) => (
-                  <tr key={order.id}>
-                    <td className="px-6 py-4 font-mono text-sm">{order.order_number}</td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium">{order.customer_name}</div>
-                      <div className="text-sm text-gray-500">{order.customer_email}</div>
-                    </td>
-                    <td className="px-6 py-4 font-semibold">{formatPrice(order.total)}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {order.payment_status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                        {order.order_status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {new Date(order.created_at).toLocaleDateString()}
-                    </td>
+          <div className="space-y-6">
+            {/* Add Tracking Form */}
+            {selectedOrder && (
+              <div className="bg-white p-6 rounded-lg shadow-md border-2 border-honey-200">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold">Add Tracking Info - Order #{selectedOrder.order_number}</h2>
+                  <button
+                    onClick={() => {
+                      setSelectedOrder(null);
+                      setTrackingForm({
+                        awbCode: '',
+                        courierName: '',
+                        trackingUrl: '',
+                        shipmentStatus: 'shipped',
+                        estimatedDelivery: '',
+                      });
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕ Close
+                  </button>
+                </div>
+                
+                <div className="bg-honey-50 p-4 rounded-lg mb-4">
+                  <p className="text-sm text-gray-700"><strong>Customer:</strong> {selectedOrder.customer_name}</p>
+                  <p className="text-sm text-gray-700"><strong>Email:</strong> {selectedOrder.customer_email}</p>
+                  <p className="text-sm text-gray-700"><strong>Address:</strong> {selectedOrder.shipping_address}</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      AWB Code / Tracking Number *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., ABC123456789"
+                      value={trackingForm.awbCode}
+                      onChange={(e) => setTrackingForm({ ...trackingForm, awbCode: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-honey-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Courier Name *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Delhivery, Blue Dart"
+                      value={trackingForm.courierName}
+                      onChange={(e) => setTrackingForm({ ...trackingForm, courierName: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-honey-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Shipment Status
+                    </label>
+                    <select
+                      value={trackingForm.shipmentStatus}
+                      onChange={(e) => setTrackingForm({ ...trackingForm, shipmentStatus: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-honey-500"
+                    >
+                      <option value="shipped">Shipped</option>
+                      <option value="in_transit">In Transit</option>
+                      <option value="out_for_delivery">Out for Delivery</option>
+                      <option value="delivered">Delivered</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Estimated Delivery
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 3-5 days, Dec 10"
+                      value={trackingForm.estimatedDelivery}
+                      onChange={(e) => setTrackingForm({ ...trackingForm, estimatedDelivery: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-honey-500"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tracking URL (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., https://track.delhivery.com/..."
+                      value={trackingForm.trackingUrl}
+                      onChange={(e) => setTrackingForm({ ...trackingForm, trackingUrl: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-honey-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Leave empty to use default tracking page</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 mt-4">
+                  <Button onClick={handleUpdateTracking}>
+                    📧 Save & Send Email to Customer
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setSelectedOrder(null);
+                      setTrackingForm({
+                        awbCode: '',
+                        courierName: '',
+                        trackingUrl: '',
+                        shipmentStatus: 'shipped',
+                        estimatedDelivery: '',
+                      });
+                    }} 
+                    variant="secondary"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Orders Table */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order #</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {orders.map((order) => (
+                    <tr key={order.id} className={order.awb_code ? 'bg-green-50' : ''}>
+                      <td className="px-6 py-4 font-mono text-sm">{order.order_number}</td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium">{order.customer_name}</div>
+                        <div className="text-sm text-gray-500">{order.customer_email}</div>
+                        {order.awb_code && (
+                          <div className="text-xs text-green-700 mt-1">
+                            📦 {order.courier_name} - {order.awb_code}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 font-semibold">{formatPrice(order.total)}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {order.payment_status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                          {order.order_status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {new Date(order.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            if (order.awb_code) {
+                              setTrackingForm({
+                                awbCode: order.awb_code || '',
+                                courierName: order.courier_name || '',
+                                trackingUrl: order.tracking_url || '',
+                                shipmentStatus: order.shipment_status || 'shipped',
+                                estimatedDelivery: order.estimated_delivery_date || '',
+                              });
+                            }
+                          }}
+                          className="text-honey-600 hover:text-honey-700 font-medium"
+                        >
+                          {order.awb_code ? '✏️ Edit' : '📦 Add'} Tracking
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
