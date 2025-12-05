@@ -117,8 +117,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         </button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
 
               {/* Total and Checkout */}
