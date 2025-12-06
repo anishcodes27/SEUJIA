@@ -30,7 +30,7 @@ export default function Footer() {
             <div className="flex flex-wrap items-center justify-center gap-6">
               {/* Instagram */}
               <a 
-                href="https://instagram.com/seujiahoney" 
+                href="https://instagram.com/_seujia" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center space-x-2 hover:text-honey-200 transition-colors duration-200"
