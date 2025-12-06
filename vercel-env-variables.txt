@@ -1,0 +1,20 @@
+# Copy these environment variables to Vercel Dashboard
+# Go to: Project Settings → Environment Variables
+# Paste each line (key=value format works in Vercel)
+
+NEXT_PUBLIC_SUPABASE_URL=https://zjyocatlghomdlavygfd.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqeW9jYXRsZ2hvbWRsYXZ5Z2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MzkwNjcsImV4cCI6MjA3ODExNTA2N30.v16A3bLFh7bgWg_0FdmIv0rEmMBH2rk6urXQr4B4LiA
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqeW9jYXRsZ2hvbWRsYXZ5Z2ZkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjUzOTA2NywiZXhwIjoyMDc4MTE1MDY3fQ.hQbIiYpvojzHEoLnsb1NZi_Oz7koZfL3XN9N6wUEkew
+NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_Rn11F8Ml4aZKjX
+RAZORPAY_KEY_SECRET=m9ef3n45MNtLXlwOfRG9y1Sn
+RESEND_API_KEY=re_CvhRzfEv_DGLUVhxcV8HQXrstZ7shEGie
+EMAIL_FROM=Seujia Honey <onboarding@resend.dev>
+RESEND_TEST_EMAIL=seujia20@gmail.com
+SHIPROCKET_EMAIL=apishiprocket@seujia.com
+SHIPROCKET_PASSWORD="aYld6IxCaTpD^K78o#WxrJ1kpGtAAUfc"
+SHIPROCKET_PICKUP_PINCODE=144411
+ADMIN_PASSWORD=MyAdmin9142
+NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
+
+# IMPORTANT: After deployment, update NEXT_PUBLIC_APP_URL with your actual Vercel URL
+# Example: https://seujia.vercel.app

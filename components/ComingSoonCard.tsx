@@ -26,16 +26,10 @@ export default function ComingSoonCard() {
           </p>
           <div className="flex flex-wrap gap-1 justify-center">
             <span className="text-xs bg-honey-100 text-honey-800 px-2 py-1 rounded-full">
-              Litchi
-            </span>
-            <span className="text-xs bg-honey-100 text-honey-800 px-2 py-1 rounded-full">
               Eucalyptus
             </span>
             <span className="text-xs bg-honey-100 text-honey-800 px-2 py-1 rounded-full">
-              Wild Forest
-            </span>
-            <span className="text-xs bg-honey-100 text-honey-800 px-2 py-1 rounded-full">
-              & More
+              Mustard
             </span>
           </div>
         </div>

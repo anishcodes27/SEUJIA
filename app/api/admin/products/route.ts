@@ -11,7 +11,7 @@ export async function GET() {
 
     if (error) throw error;
 
-    return NextResponse.json({ products });
+    return NextResponse.json(products);
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json(
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    const { name, description, price, stock, slug, image_url, category } = body;
+    const { name, description, price, stock, slug, image_url, variants, is_active } = body;
 
     // Validate required fields
     if (!name || !price || !slug) {
@@ -61,8 +61,8 @@ export async function POST(request: Request) {
           stock: parseInt(stock) || 0,
           slug,
           image_url: image_url || null,
-          category: category || 'honey',
-          is_active: true,
+          variants: variants || [],
+          is_active: is_active ?? true,
         },
       ])
       .select()
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({ product, message: 'Product added successfully' });
+    return NextResponse.json(product);
   } catch (error) {
     console.error('Error adding product:', error);
     return NextResponse.json(
@@ -84,8 +84,8 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    
-    const { id, name, description, price, stock, slug, image_url, category } = body;
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
     if (!id) {
       return NextResponse.json(
@@ -93,6 +93,8 @@ export async function PUT(request: Request) {
         { status: 400 }
       );
     }
+
+    const { name, description, price, stock, slug, image_url, variants, is_active } = body;
 
     // Update product
     const { data: product, error } = await supabaseAdmin
@@ -104,7 +106,8 @@ export async function PUT(request: Request) {
         stock: parseInt(stock),
         slug,
         image_url,
-        category,
+        variants: variants || [],
+        is_active: is_active ?? true,
       })
       .eq('id', id)
       .select()
@@ -112,7 +115,7 @@ export async function PUT(request: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({ product, message: 'Product updated successfully' });
+    return NextResponse.json(product);
   } catch (error) {
     console.error('Error updating product:', error);
     return NextResponse.json(
@@ -142,7 +145,7 @@ export async function DELETE(request: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({ message: 'Product deleted successfully' });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting product:', error);
     return NextResponse.json(

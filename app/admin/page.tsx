@@ -10,7 +10,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [activeTab, setActiveTab] = useState<'products' | 'coupons' | 'orders'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'coupons' | 'orders'>('orders');
   
   // Products state
   const [products, setProducts] = useState<Product[]>([]);
@@ -227,18 +227,23 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <Button onClick={handleLogout} variant="secondary">
-            Logout
-          </Button>
+          <div className="flex gap-4">
+            <Button onClick={() => router.push('/admin/products')} variant="secondary">
+              Product Manager
+            </Button>
+            <Button onClick={handleLogout} variant="secondary">
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-4 mb-8 border-b">
           <button
-            onClick={() => setActiveTab('products')}
-            className={`pb-2 px-4 ${activeTab === 'products' ? 'border-b-2 border-honey-600 text-honey-600 font-medium' : 'text-gray-600'}`}
+            onClick={() => setActiveTab('orders')}
+            className={`pb-2 px-4 ${activeTab === 'orders' ? 'border-b-2 border-honey-600 text-honey-600 font-medium' : 'text-gray-600'}`}
           >
-            Products
+            Orders & Tracking
           </button>
           <button
             onClick={() => setActiveTab('coupons')}
@@ -247,10 +252,10 @@ export default function AdminPage() {
             Coupons
           </button>
           <button
-            onClick={() => setActiveTab('orders')}
-            className={`pb-2 px-4 ${activeTab === 'orders' ? 'border-b-2 border-honey-600 text-honey-600 font-medium' : 'text-gray-600'}`}
+            onClick={() => setActiveTab('products')}
+            className={`pb-2 px-4 ${activeTab === 'products' ? 'border-b-2 border-honey-600 text-honey-600 font-medium' : 'text-gray-600'}`}
           >
-            Orders
+            Products (Old)
           </button>
         </div>
 

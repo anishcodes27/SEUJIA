@@ -54,7 +54,7 @@ export default function Navbar() {
               />
             </div>
             {/* Seujia Text Logo */}
-            <div className={`relative transform group-hover:scale-105 transition-all duration-300 w-20 h-14 sm:w-24 sm:h-16 md:w-32 md:h-20`}>
+            <div className={`relative transform group-hover:scale-105 transition-all duration-300 w-16 h-12 sm:w-20 sm:h-14 md:w-24 md:h-16`}>
               <Image 
                 src="/logo.png" 
                 alt="Seujia Honey" 
