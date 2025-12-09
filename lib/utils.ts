@@ -23,8 +23,10 @@ export function validateEmail(email: string): boolean {
 }
 
 export function validatePhone(phone: string): boolean {
-  const phoneRegex = /^[\d\s\-\+\(\)]{10,}$/;
-  return phoneRegex.test(phone);
+  // Remove all non-digit characters
+  const digitsOnly = phone.replace(/\D/g, '');
+  // Must be exactly 10 digits
+  return digitsOnly.length === 10;
 }
 
 export async function uploadToSupabase(

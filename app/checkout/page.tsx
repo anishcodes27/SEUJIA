@@ -208,7 +208,7 @@ export default function CheckoutPage() {
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone is required';
     } else if (!validatePhone(formData.phone)) {
-      newErrors.phone = 'Invalid phone number';
+      newErrors.phone = 'Phone number must be exactly 10 digits';
     }
     if (!formData.address.trim()) newErrors.address = 'Address is required';
     if (!formData.pincode.trim()) {
@@ -361,7 +361,12 @@ export default function CheckoutPage() {
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setFormData({ ...formData, phone: value });
+                  }}
+                  maxLength={10}
+                  placeholder="10-digit mobile number"
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-honey-500 ${
                     errors.phone ? 'border-red-500' : 'border-gray-300'
                   }`}

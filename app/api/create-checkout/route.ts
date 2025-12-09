@@ -113,6 +113,49 @@ export async function POST(request: NextRequest) {
 
     if (itemsError) throw itemsError;
 
+    // Reduce stock for each product/variant
+    for (const item of cart) {
+      if (item.selectedVariant) {
+        // Update variant stock
+        const { data: product } = await supabaseAdmin
+          .from('products')
+          .select('variants')
+          .eq('id', item.product.id)
+          .single();
+
+        if (product && product.variants) {
+          const updatedVariants = product.variants.map((v: any) => {
+            if (v.size === item.selectedVariant.size) {
+              return {
+                ...v,
+                stock: Math.max(0, v.stock - item.quantity)
+              };
+            }
+            return v;
+          });
+
+          await supabaseAdmin
+            .from('products')
+            .update({ variants: updatedVariants })
+            .eq('id', item.product.id);
+        }
+      } else {
+        // Update base product stock
+        const { data: product } = await supabaseAdmin
+          .from('products')
+          .select('stock')
+          .eq('id', item.product.id)
+          .single();
+
+        if (product) {
+          await supabaseAdmin
+            .from('products')
+            .update({ stock: Math.max(0, product.stock - item.quantity) })
+            .eq('id', item.product.id);
+        }
+      }
+    }
+
     // Increment coupon usage
     if (validatedCoupon) {
       await supabaseAdmin
