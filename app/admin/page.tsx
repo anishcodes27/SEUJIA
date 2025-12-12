@@ -192,6 +192,59 @@ export default function AdminPage() {
     }
   };
 
+  const handleMarkAsDelivered = async (orderId: string) => {
+    if (!confirm('Mark this order as delivered? This will send a delivery confirmation email to the customer.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/update-order-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: orderId,
+          orderStatus: 'delivered',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message || 'Order marked as delivered!');
+        loadData();
+      } else {
+        alert(data.error || 'Failed to update order status');
+      }
+    } catch (error) {
+      console.error('Error marking order as delivered:', error);
+      alert('Failed to update order status');
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string, orderNumber: string) => {
+    if (!confirm(`Are you sure you want to delete order ${orderNumber}? This will restore the stock and cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/delete-order?id=${orderId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message || 'Order deleted successfully!');
+        loadData();
+      } else {
+        alert(data.error || 'Failed to delete order');
+      }
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      alert('Failed to delete order');
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -646,23 +699,41 @@ export default function AdminPage() {
                         {new Date(order.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            if (order.awb_code) {
-                              setTrackingForm({
-                                awbCode: order.awb_code || '',
-                                courierName: order.courier_name || '',
-                                trackingUrl: order.tracking_url || '',
-                                shipmentStatus: order.shipment_status || 'shipped',
-                                estimatedDelivery: order.estimated_delivery_date || '',
-                              });
-                            }
-                          }}
-                          className="text-honey-600 hover:text-honey-700 font-medium"
-                        >
-                          {order.awb_code ? '✏️ Edit' : '📦 Add'} Tracking
-                        </button>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              if (order.awb_code) {
+                                setTrackingForm({
+                                  awbCode: order.awb_code || '',
+                                  courierName: order.courier_name || '',
+                                  trackingUrl: order.tracking_url || '',
+                                  shipmentStatus: order.shipment_status || 'shipped',
+                                  estimatedDelivery: order.estimated_delivery_date || '',
+                                });
+                              }
+                            }}
+                            className="text-honey-600 hover:text-honey-700 font-medium text-sm"
+                          >
+                            {order.awb_code ? '✏️ Edit' : '📦 Add'} Tracking
+                          </button>
+                          
+                          {order.order_status !== 'delivered' && (
+                            <button
+                              onClick={() => handleMarkAsDelivered(order.id)}
+                              className="text-green-600 hover:text-green-700 font-medium text-sm"
+                            >
+                              ✓ Mark Delivered
+                            </button>
+                          )}
+                          
+                          <button
+                            onClick={() => handleDeleteOrder(order.id, order.order_number)}
+                            className="text-red-600 hover:text-red-700 font-medium text-sm"
+                          >
+                            🗑️ Delete Order
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
