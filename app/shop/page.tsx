@@ -13,12 +13,18 @@ export default function ShopPage() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const response = await fetch('/api/products');
+        // Add cache busting and no-cache
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/products?_=${timestamp}`, {
+          cache: 'no-store',
+        });
         const data = await response.json();
         
         if (!response.ok) {
           throw new Error(data.error || 'Failed to fetch products');
         }
+        
+        console.log('Shop - Fetched products:', data);
         
         // Ensure data is an array
         if (Array.isArray(data)) {

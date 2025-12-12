@@ -14,9 +14,14 @@ export default function Home() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('/api/products?limit=4');
+        // Add cache busting parameter
+        const timestamp = new Date().getTime();
+        const res = await fetch(`/api/products?limit=4&_=${timestamp}`, {
+          cache: 'no-store',
+        });
         if (!res.ok) throw new Error('Failed to fetch');
         const data = await res.json();
+        console.log('Fetched products:', data);
         setProducts(data);
       } catch (error) {
         console.error('Error fetching products:', error);
