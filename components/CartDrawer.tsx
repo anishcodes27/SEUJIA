@@ -53,6 +53,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               <div className="space-y-4 mb-6">
                 {cart.map((item, index) => {
                   const displayPrice = item.selectedVariant ? item.selectedVariant.price : item.product.price;
+                  const currentStock = item.selectedVariant ? item.selectedVariant.stock : item.product.stock;
                   const cartKey = item.selectedVariant 
                     ? `${item.product.id}-${item.selectedVariant.size}` 
                     : item.product.id;
