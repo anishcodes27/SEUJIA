@@ -656,90 +656,100 @@ export default function AdminPage() {
             )}
 
             {/* Orders Table */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order #</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {orders.map((order) => (
-                    <tr key={order.id} className={order.awb_code ? 'bg-green-50' : ''}>
-                      <td className="px-6 py-4 font-mono text-sm">{order.order_number}</td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium">{order.customer_name}</div>
-                        <div className="text-sm text-gray-500">{order.customer_email}</div>
-                        {order.awb_code && (
-                          <div className="text-xs text-green-700 mt-1">
-                            📦 {order.courier_name} - {order.awb_code}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 font-semibold">{formatPrice(order.total)}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {order.payment_status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                          {order.order_status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {new Date(order.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-2">
-                          <button
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              if (order.awb_code) {
-                                setTrackingForm({
-                                  awbCode: order.awb_code || '',
-                                  courierName: order.courier_name || '',
-                                  trackingUrl: order.tracking_url || '',
-                                  shipmentStatus: order.shipment_status || 'shipped',
-                                  estimatedDelivery: order.estimated_delivery_date || '',
-                                });
-                              }
-                            }}
-                            className="text-honey-600 hover:text-honey-700 font-medium text-sm"
-                          >
-                            {order.awb_code ? '✏️ Edit' : '📦 Add'} Tracking
-                          </button>
-                          
-                          {order.order_status !== 'delivered' && (
-                            <button
-                              onClick={() => handleMarkAsDelivered(order.id)}
-                              className="text-green-600 hover:text-green-700 font-medium text-sm"
-                            >
-                              ✓ Mark Delivered
-                            </button>
-                          )}
-                          
-                          <button
-                            onClick={() => handleDeleteOrder(order.id, order.order_number)}
-                            className="text-red-600 hover:text-red-700 font-medium text-sm"
-                          >
-                            🗑️ Delete Order
-                          </button>
-                        </div>
-                      </td>
+            {orders.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                <div className="text-6xl mb-4">📦</div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">No Orders Yet</h2>
+                <p className="text-gray-600">
+                  Orders will appear here once customers start placing orders.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order #</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {orders.map((order) => (
+                      <tr key={order.id} className={order.awb_code ? 'bg-green-50' : ''}>
+                        <td className="px-6 py-4 font-mono text-sm">{order.order_number}</td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium">{order.customer_name}</div>
+                          <div className="text-sm text-gray-500">{order.customer_email}</div>
+                          {order.awb_code && (
+                            <div className="text-xs text-green-700 mt-1">
+                              📦 {order.courier_name} - {order.awb_code}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 font-semibold">{formatPrice(order.total)}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {order.payment_status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                            {order.order_status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                if (order.awb_code) {
+                                  setTrackingForm({
+                                    awbCode: order.awb_code || '',
+                                    courierName: order.courier_name || '',
+                                    trackingUrl: order.tracking_url || '',
+                                    shipmentStatus: order.shipment_status || 'shipped',
+                                    estimatedDelivery: order.estimated_delivery_date || '',
+                                  });
+                                }
+                              }}
+                              className="text-honey-600 hover:text-honey-700 font-medium text-sm"
+                            >
+                              {order.awb_code ? '✏️ Edit' : '📦 Add'} Tracking
+                            </button>
+                            
+                            {order.order_status !== 'delivered' && (
+                              <button
+                                onClick={() => handleMarkAsDelivered(order.id)}
+                                className="text-green-600 hover:text-green-700 font-medium text-sm"
+                              >
+                                ✓ Mark Delivered
+                              </button>
+                            )}
+                            
+                            <button
+                              onClick={() => handleDeleteOrder(order.id, order.order_number)}
+                              className="text-red-600 hover:text-red-700 font-medium text-sm"
+                            >
+                              🗑️ Delete Order
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>
