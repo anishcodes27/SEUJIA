@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
         shipping_address: fullAddress,
         subtotal: subtotal,
         discount_amount: discount,
+        delivery_charges: deliveryCharges || 0,
         total: finalTotal,
         coupon_code: validatedCoupon ? validatedCoupon.code : null,
         payment_provider: paymentMethod,

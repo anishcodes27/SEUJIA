@@ -51,6 +51,18 @@ export default function CheckoutPage() {
         email: user.email || prev.email,
       }));
     }
+    
+    // Load coupon from localStorage if it was applied in cart
+    const savedCoupon = localStorage.getItem('appliedCoupon');
+    if (savedCoupon) {
+      try {
+        const { code, discount: savedDiscount } = JSON.parse(savedCoupon);
+        setCouponCode(code);
+        setDiscount(savedDiscount);
+      } catch (error) {
+        console.error('Error loading coupon:', error);
+      }
+    }
   }, [user]);
   const [fetchingShipping, setFetchingShipping] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -88,43 +100,40 @@ export default function CheckoutPage() {
 
       if (response.ok && data.success) {
         const rates = data.data;
+        // Add ₹30 COD charges if COD payment method
+        const codCharges = isCOD ? 30 : 0;
         setShippingInfo({
           courier_name: rates.courier_name,
           etd: rates.etd,
           freight_charge: rates.freight_charge,
-          cod_charges: rates.cod_charges,
+          cod_charges: codCharges,
         });
-        setDeliveryCharges(rates.total_charge);
+        setDeliveryCharges(rates.freight_charge + codCharges);
       } else {
         // Fallback to fixed charges if Shiprocket fails
         console.log('Shiprocket unavailable, using fixed charges');
-        const fixedFreight = 50;
-        const fixedCOD = isCOD ? 30 : 0;
         setShippingInfo({
           courier_name: 'Standard Delivery',
           etd: '5-7 days',
-          freight_charge: fixedFreight,
-          cod_charges: fixedCOD,
+          freight_charge: 0,
+          cod_charges: 0,
         });
-        setDeliveryCharges(fixedFreight + fixedCOD);
+        setDeliveryCharges(0);
       }
     } catch (error) {
       // Fallback to fixed charges on error
       console.log('Error fetching rates, using fixed charges');
-      const fixedFreight = 50;
-      const fixedCOD = isCOD ? 30 : 0;
       setShippingInfo({
         courier_name: 'Standard Delivery',
         etd: '5-7 days',
-        freight_charge: fixedFreight,
-        cod_charges: fixedCOD,
+        freight_charge: 0,
+        cod_charges: 0,
       });
-      setDeliveryCharges(fixedFreight + fixedCOD);
+      setDeliveryCharges(0);
       setErrors(prev => ({ 
         ...prev, 
         shipping: 'Failed to calculate shipping charges' 
       }));
-      setDeliveryCharges(0);
     } finally {
       setFetchingShipping(false);
     }
@@ -531,7 +540,7 @@ export default function CheckoutPage() {
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
+                  <span>Discount ({couponCode})</span>
                   <span>-{formatPrice(discount)}</span>
                 </div>
               )}
@@ -568,12 +577,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-red-500 text-sm">
                   <span>{errors.shipping}</span>
                 </div>
-              ) : (
-                <div className="flex justify-between text-gray-400 text-sm">
-                  <span>Delivery Charges</span>
-                  <span>Enter pincode</span>
-                </div>
-              )}
+              ) : null}
               
               <div className="flex justify-between text-lg font-bold pt-2 border-t">
                 <span>Total</span>

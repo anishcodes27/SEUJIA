@@ -23,7 +23,9 @@ interface Order {
   shipping_address: string;
   subtotal: number;
   discount_amount: number;
+  delivery_charges?: number;
   total: number;
+  coupon_code?: string;
   payment_provider: string;
   payment_status: string;
   order_status: string;
@@ -292,8 +294,16 @@ export default function OrdersPage() {
                   </div>
                   {order.discount_amount > 0 && (
                     <div className="flex justify-between items-center mb-2 text-green-600">
-                      <span>Discount</span>
+                      <span>Discount {order.coupon_code && `(${order.coupon_code})`}</span>
                       <span>-{formatPrice(order.discount_amount)}</span>
+                    </div>
+                  )}
+                  {order.delivery_charges && order.delivery_charges > 0 && (
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-600">
+                        Delivery Charges {order.payment_provider === 'cod' && '(COD)'}
+                      </span>
+                      <span className="text-gray-900">{formatPrice(order.delivery_charges)}</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center pt-2 border-t border-gray-200">

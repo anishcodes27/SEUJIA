@@ -99,7 +99,17 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           >
                             −
                           </button>
-                          <span className="w-8 text-center">{item.quantity}</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max={currentStock}
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value) || 1;
+                              updateQuantity(item.product.id, Math.max(1, Math.min(currentStock, value)), item.selectedVariant);
+                            }}
+                            className="w-14 text-center border border-gray-300 rounded py-1 focus:outline-none focus:ring-2 focus:ring-honey-500"
+                          />
                           <button
                             onClick={() =>
                               updateQuantity(item.product.id, item.quantity + 1, item.selectedVariant)

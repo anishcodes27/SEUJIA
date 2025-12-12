@@ -125,7 +125,7 @@ export default function AuthenticitySection() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <a
-              href="mailto:info@seujiahoney.com"
+              href="mailto:seujiaorganics@gmail.com"
               className="inline-flex items-center space-x-2 bg-honey-600 hover:bg-honey-700 text-white px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,7 +134,7 @@ export default function AuthenticitySection() {
               <span>Contact Us</span>
             </a>
             <a
-              href="tel:+911234567890"
+              href="tel:+916001582738"
               className="inline-flex items-center space-x-2 bg-white border-2 border-honey-600 text-honey-700 hover:bg-honey-50 px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

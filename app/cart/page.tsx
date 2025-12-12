@@ -104,7 +104,18 @@ export default function CartPage() {
                     >
                       −
                     </button>
-                    <span className="w-8 text-center">{item.quantity}</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max={item.product.stock}
+                      value={item.quantity}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 1;
+                        const maxStock = item.product.stock;
+                        updateQuantity(item.product.id, Math.max(1, Math.min(maxStock, value)));
+                      }}
+                      className="w-16 text-center border border-gray-300 rounded py-1 focus:outline-none focus:ring-2 focus:ring-honey-500"
+                    />
                     <button
                       onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                       className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100"
@@ -184,7 +195,20 @@ export default function CartPage() {
               </span>
             </div>
 
-            <Link href="/checkout" className="block">
+            <Link 
+              href="/checkout" 
+              className="block"
+              onClick={() => {
+                if (discount > 0 && couponCode) {
+                  localStorage.setItem('appliedCoupon', JSON.stringify({
+                    code: couponCode,
+                    discount: discount
+                  }));
+                } else {
+                  localStorage.removeItem('appliedCoupon');
+                }
+              }}
+            >
               <Button className="w-full">Proceed to Checkout</Button>
             </Link>
 

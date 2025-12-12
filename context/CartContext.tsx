@@ -101,11 +101,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart((prevCart) =>
       prevCart.map((item) => {
         if (variant) {
-          return item.product.id === productId && item.selectedVariant?.size === variant.size
-            ? { ...item, quantity }
-            : item;
+          if (item.product.id === productId && item.selectedVariant?.size === variant.size) {
+            // Check stock limit for variant
+            const maxStock = variant.stock;
+            const limitedQuantity = Math.min(quantity, maxStock);
+            return { ...item, quantity: limitedQuantity };
+          }
+          return item;
         }
-        return item.product.id === productId ? { ...item, quantity } : item;
+        if (item.product.id === productId) {
+          // Check stock limit for base product
+          const maxStock = item.product.stock;
+          const limitedQuantity = Math.min(quantity, maxStock);
+          return { ...item, quantity: limitedQuantity };
+        }
+        return item;
       })
     );
   };
