@@ -73,7 +73,7 @@ export function getWelcomeEmailHtml(name: string): string {
                                 Stay Connected
                             </p>
                             <p style="color: #78350F; font-size: 14px; margin: 0 0 15px 0;">
-                                📧 Email: hello@seujia.com | 📱 Phone: +91 1234567890
+                                📧 Email: seujiaorganics@gmail.com | 📱 Phone: +91 6001582738
                             </p>
                             <div style="margin: 15px 0;">
                                 <a href="#" style="display: inline-block; margin: 0 10px; color: #D97706; text-decoration: none; font-size: 20px;">📷</a>
