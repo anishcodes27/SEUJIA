@@ -47,39 +47,35 @@ export async function DELETE(request: NextRequest) {
 
           if (products && products.length > 0) {
             const product = products[0];
-            // Check if this item has a variant (check if product_name includes size info)
-            const hasVariants = product.variants && product.variants.length > 0;
             
-            if (hasVariants) {
-              // Try to match variant by name pattern
-              const sizeMatch = item.product_name.match(/\((\d+(?:\.\d+)?(?:kg|g))\)/i);
-              if (sizeMatch) {
-                const size = sizeMatch[1];
-                const updatedVariants = product.variants.map((v: any) => {
-                  if (v.size === size) {
-                    return {
-                      ...v,
-                      stock: v.stock + item.quantity
-                    };
-                  }
-                  return v;
-                });
+            // Check if item has variant_size stored
+            if (item.variant_size) {
+              // Restore variant stock
+              const updatedVariants = product.variants.map((v: any) => {
+                if (v.size === item.variant_size) {
+                  return {
+                    ...v,
+                    stock: v.stock + item.quantity
+                  };
+                }
+                return v;
+              });
 
-                await supabaseAdmin
-                  .from('products')
-                  .update({ variants: updatedVariants })
-                  .eq('id', item.product_id);
-                
-                console.log('Restored variant stock for:', size);
-              }
-            } else {
-              // Restore base product stock
               await supabaseAdmin
                 .from('products')
-                .update({ stock: product.stock + item.quantity })
+                .update({ variants: updatedVariants })
                 .eq('id', item.product_id);
               
-              console.log('Restored product stock');
+              console.log('Restored variant stock for:', item.variant_size, 'Quantity restored:', item.quantity);
+            } else {
+              // Restore base product stock
+              const newStock = product.stock + item.quantity;
+              await supabaseAdmin
+                .from('products')
+                .update({ stock: newStock })
+                .eq('id', item.product_id);
+              
+              console.log('Restored product stock to:', newStock, 'Quantity restored:', item.quantity);
             }
           }
         } catch (error) {

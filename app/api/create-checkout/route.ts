@@ -99,14 +99,22 @@ export async function POST(request: NextRequest) {
     });
 
     // Create order items
-    const orderItems = cart.map((item: any) => ({
-      order_id: order.id,
-      product_id: item.product.id,
-      product_name: item.product.name,
-      product_price: item.product.price,
-      quantity: item.quantity,
-      subtotal: item.product.price * item.quantity,
-    }));
+    const orderItems = cart.map((item: any) => {
+      const price = item.selectedVariant ? item.selectedVariant.price : item.product.price;
+      const productName = item.selectedVariant 
+        ? `${item.product.name} (${item.selectedVariant.size})` 
+        : item.product.name;
+      
+      return {
+        order_id: order.id,
+        product_id: item.product.id,
+        product_name: productName,
+        product_price: price,
+        quantity: item.quantity,
+        subtotal: price * item.quantity,
+        variant_size: item.selectedVariant?.size || null,
+      };
+    });
 
     const { error: itemsError } = await supabaseAdmin
       .from('order_items')
